@@ -1,15 +1,32 @@
 
+import { db } from '../db';
+import { usersTable } from '../db/schema';
 import { type User } from '../schema';
+import { eq } from 'drizzle-orm';
 
-export const getCurrentUser = async (): Promise<User> => {
-  // This is a placeholder declaration! Real code should be implemented here.
-  // The goal of this handler is to get current authenticated user details from JWT token.
-  return Promise.resolve({
-    id: 1,
-    email: 'user@example.com',
-    password_hash: 'hashed_password_placeholder',
-    role: 'user',
-    created_at: new Date(),
-    updated_at: new Date()
-  } as User);
+export const getCurrentUser = async (userId: number): Promise<User> => {
+  try {
+    // Query user by ID
+    const result = await db.select()
+      .from(usersTable)
+      .where(eq(usersTable.id, userId))
+      .execute();
+
+    if (result.length === 0) {
+      throw new Error('User not found');
+    }
+
+    const user = result[0];
+    return {
+      id: user.id,
+      email: user.email,
+      password_hash: user.password_hash,
+      role: user.role,
+      created_at: user.created_at,
+      updated_at: user.updated_at
+    };
+  } catch (error) {
+    console.error('Get current user failed:', error);
+    throw error;
+  }
 };

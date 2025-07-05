@@ -1,8 +1,29 @@
 
+import { db } from '../db';
+import { usersTable } from '../db/schema';
+import { eq } from 'drizzle-orm';
 import { type IdParam } from '../schema';
 
 export const deleteUser = async (params: IdParam): Promise<{ success: boolean }> => {
-  // This is a placeholder declaration! Real code should be implemented here.
-  // The goal of this handler is to delete a user by ID (Admin role required).
-  return Promise.resolve({ success: true });
+  try {
+    // Check if user exists first
+    const existingUser = await db.select()
+      .from(usersTable)
+      .where(eq(usersTable.id, params.id))
+      .execute();
+
+    if (existingUser.length === 0) {
+      throw new Error('User not found');
+    }
+
+    // Delete the user
+    await db.delete(usersTable)
+      .where(eq(usersTable.id, params.id))
+      .execute();
+
+    return { success: true };
+  } catch (error) {
+    console.error('User deletion failed:', error);
+    throw error;
+  }
 };

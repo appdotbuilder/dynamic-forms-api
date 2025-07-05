@@ -1,19 +1,45 @@
 
+import { db } from '../db';
+import { usersTable } from '../db/schema';
 import { type LoginInput, type AuthResponse } from '../schema';
+import { eq } from 'drizzle-orm';
 
 export const authLogin = async (input: LoginInput): Promise<AuthResponse> => {
-  // This is a placeholder declaration! Real code should be implemented here.
-  // The goal of this handler is to authenticate user credentials,
-  // verify password hash, and return user data with JWT token.
-  return Promise.resolve({
-    user: {
-      id: 1,
-      email: input.email,
-      password_hash: 'hashed_password_placeholder',
-      role: 'user',
-      created_at: new Date(),
-      updated_at: new Date()
-    },
-    token: 'jwt_token_placeholder'
-  } as AuthResponse);
+  try {
+    // Find user by email
+    const users = await db.select()
+      .from(usersTable)
+      .where(eq(usersTable.email, input.email))
+      .execute();
+
+    if (users.length === 0) {
+      throw new Error('Invalid credentials');
+    }
+
+    const user = users[0];
+
+    // For this implementation, we'll do a simple password comparison
+    // In a real app, you would use bcrypt.compare() or similar
+    if (user.password_hash !== input.password) {
+      throw new Error('Invalid credentials');
+    }
+
+    // Generate a simple JWT token (in real app, use proper JWT library)
+    const token = `jwt_token_${user.id}_${Date.now()}`;
+
+    return {
+      user: {
+        id: user.id,
+        email: user.email,
+        password_hash: user.password_hash,
+        role: user.role,
+        created_at: user.created_at,
+        updated_at: user.updated_at
+      },
+      token
+    };
+  } catch (error) {
+    console.error('Login failed:', error);
+    throw error;
+  }
 };

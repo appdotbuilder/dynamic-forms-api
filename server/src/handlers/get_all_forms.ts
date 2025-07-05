@@ -1,8 +1,17 @@
 
+import { db } from '../db';
+import { formsTable } from '../db/schema';
 import { type Form } from '../schema';
 
 export const getAllForms = async (): Promise<Form[]> => {
-  // This is a placeholder declaration! Real code should be implemented here.
-  // The goal of this handler is to fetch all forms from the database (Manager/Admin role required).
-  return Promise.resolve([]);
+  try {
+    const results = await db.select()
+      .from(formsTable)
+      .execute();
+
+    return results;
+  } catch (error) {
+    console.error('Failed to get all forms:', error);
+    throw error;
+  }
 };
